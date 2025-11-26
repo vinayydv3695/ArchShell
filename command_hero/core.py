@@ -68,6 +68,9 @@ class CommandHero:
             "tree": self._tree,
             "du": self._du,
             "diff": self._diff,
+            "edit": self._edit,
+            "vim": self._vim,
+            "nano": self._nano,
             "sort": self._sort,
             "env": self._env,
             "which": self._which,
@@ -205,7 +208,7 @@ class CommandHero:
         
         categories = {
             "Navigation": ["cd", "pwd", "ls", "tree"],
-            "File Operations": ["cat", "touch", "mkdir", "rm", "rmdir", "mv", "cp"],
+            "File Operations": ["cat", "touch", "mkdir", "rm", "rmdir", "mv", "cp", "edit"],
             "Text Processing": ["echo", "head", "tail", "grep", "wc", "sort", "diff"],
             "Search": ["find", "which"],
             "System": ["clear", "history", "du", "env"],
@@ -307,6 +310,42 @@ class CommandHero:
                 print(f"{self.COLORS['red']}No such file: {filepath}{self.COLORS['reset']}")
             except PermissionError:
                 print(f"{self.COLORS['red']}Permission denied: {filepath}{self.COLORS['reset']}")
+
+    def _edit(self, args: List[str]):
+        """Open a file in the user's editor (respects $EDITOR)."""
+        # Determine editor: explicit arg, $EDITOR, fallback to vim
+        editor = os.environ.get("EDITOR") or "vim"
+        cmd = [editor]
+        if args:
+            cmd += args
+
+        try:
+            # Launch the editor, inheriting stdio so interactive editors work
+            subprocess.call(cmd)
+        except FileNotFoundError:
+            print(f"{self.COLORS['red']}Editor not found: {cmd[0]}{self.COLORS['reset']}")
+        except Exception as e:
+            print(f"{self.COLORS['red']}Failed to launch editor: {e}{self.COLORS['reset']}")
+
+    def _vim(self, args: List[str]):
+        """Shortcut to open vim (or fall back if not present)."""
+        cmd = ["vim"] + args
+        try:
+            subprocess.call(cmd)
+        except FileNotFoundError:
+            print(f"{self.COLORS['red']}vim not found{self.COLORS['reset']}")
+        except Exception as e:
+            print(f"{self.COLORS['red']}Failed to launch vim: {e}{self.COLORS['reset']}")
+
+    def _nano(self, args: List[str]):
+        """Shortcut to open nano."""
+        cmd = ["nano"] + args
+        try:
+            subprocess.call(cmd)
+        except FileNotFoundError:
+            print(f"{self.COLORS['red']}nano not found{self.COLORS['reset']}")
+        except Exception as e:
+            print(f"{self.COLORS['red']}Failed to launch nano: {e}{self.COLORS['reset']}")
 
     def _echo(self, args: List[str]):
         """Print text to stdout."""

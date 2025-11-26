@@ -1,5 +1,6 @@
 import os
 import pytest
+import subprocess
 from command_hero.core import CommandHero
 
 
@@ -75,3 +76,42 @@ def test_grep(tmp_path, capsys):
     captured = capsys.readouterr()
     assert "hello" in captured.out
     assert ":hello" in captured.out  # Contains the matched line
+
+
+def test_edit_invokes_editor(monkeypatch):
+    hero = CommandHero()
+
+    called = {}
+
+    def fake_call(cmd, *a, **kw):
+        # record the command invoked and pretend it succeeded
+        called['cmd'] = cmd
+        return 0
+
+    monkeypatch.setattr(subprocess, 'call', fake_call)
+
+    # Call edit with a filename
+    hero._edit(['/tmp/testfile.txt'])
+
+    assert 'cmd' in called
+    # Editor should be the first element and path should be last
+    assert called['cmd'][-1] == '/tmp/testfile.txt'
+
+
+def test_vim_and_nano_invokes(monkeypatch):
+    hero = CommandHero()
+    calls = []
+
+    def fake_call(cmd, *a, **kw):
+        calls.append(cmd)
+        return 0
+
+    monkeypatch.setattr(subprocess, 'call', fake_call)
+
+    hero._vim(['/tmp/a'])
+    hero._nano(['/tmp/b'])
+
+    assert calls[0][0] == 'vim'
+    assert calls[0][-1] == '/tmp/a'
+    assert calls[1][0] == 'nano'
+    assert calls[1][-1] == '/tmp/b'
